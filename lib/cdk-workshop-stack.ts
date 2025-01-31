@@ -60,14 +60,14 @@ export class CdkWorkshopStack extends Stack {
     //webServerからのアクセスのみを許可
     rdsServer1.connections.allowDefaultPortFrom(webServer1);
   
-  //ALBを宣言
-  const alb = new elbv2.ApplicationLoadBalancer(this, "wordPressALB", {
-    vpc,
-    internetFacing: true
-  });
+  // //ALBを宣言
+  // const alb = new elbv2.ApplicationLoadBalancer(this, "wordPressALB", {
+  //   vpc,
+  //   internetFacing: true
+  // });
 
-  //リスナーを追加
-  const albListner = alb.addListener("wordPressALBListner", {port: 80});
+  // //リスナーを追加
+  // const albListner = alb.addListener("wordPressALBListner", {port: 80});
 
   
   }
