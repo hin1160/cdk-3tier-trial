@@ -1,13 +1,11 @@
-import { aws_elasticloadbalancingv2, Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
-import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-
-// ファイルを読み込むためのパッケージを import
-import { readFileSync } from 'fs';
-//CFnOutputをimport
-import { CfnOutput } from 'aws-cdk-lib';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; 
+import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
+import { readFileSync } from 'fs'; // ファイルを読み込むためのパッケージ
+import { CfnOutput } from 'aws-cdk-lib'; //CFnOutput
 
 //ここからリソースを作成
 export class CdkWorkshopStack extends Stack {
@@ -40,9 +38,6 @@ export class CdkWorkshopStack extends Stack {
     //EC2インスタンスにユーザーデータを追加
     webServer1.addUserData(script);
 
-    //port80, すべてのIPアドレスからのアクセスを許可
-    webServer1.connections.allowFromAnyIpv4(ec2.Port.tcp(80));
-
     //インスタンスのパブリックIPを含むURLを出力
     new CfnOutput(this, "WordpressServer1PublicIPAddress", {
       value: `http://${webServer1.instancePublicIp}`
@@ -60,16 +55,29 @@ export class CdkWorkshopStack extends Stack {
     //webServerからのアクセスのみを許可
     rdsServer1.connections.allowDefaultPortFrom(webServer1);
   
-  // //ALBを宣言
-  // const alb = new elbv2.ApplicationLoadBalancer(this, "wordPressALB", {
-  //   vpc,
-  //   internetFacing: true
-  // });
+  //ALBを宣言
+  const alb = new elbv2.ApplicationLoadBalancer(this, "wordPressALB", {
+    vpc,
+    internetFacing: true
+  });
 
-  // //リスナーを追加
-  // const albListner = alb.addListener("wordPressALBListner", {port: 80});
+  //リスナーを追加
+  const albListner = alb.addListener("wordPressALBListner", {port: 80});
 
+  //ターゲットとなるインスタンスを宣言
+  const instanceTarget = new targets.InstanceTarget(webServer1, 80); 
   
+  //ターゲットをリスナーに追加
+  //addListnerメソッドがApplicationListnerを返すので、ApplicationListnerクラスのメソッドが使えるようになる
+  albListner.addTargets("ALBListnerTargets", {
+    port: 80,
+    targets: [instanceTarget],
+    healthCheck: {path : "/wp-includes/images/blank.gif"}, //HealthCheck型のオブジェクト
+  })  
+
+  //ALBからEC2へのアクセスを許可
+  webServer1.connections.allowFrom(alb,ec2.Port.tcp(80));
+
   }
 }
 
