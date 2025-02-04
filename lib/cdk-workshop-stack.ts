@@ -33,6 +33,7 @@ export class CdkWorkshopStack extends Stack {
       vpc,
       databaseName: "wordpress",
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.SMALL),
+      multiAz: true
     });
 
     //アクセス許可対象をコンストラクト内のインスタンスに変更
