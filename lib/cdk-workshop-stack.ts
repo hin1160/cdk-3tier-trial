@@ -1,26 +1,52 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; 
 import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import { WebServerInstance } from './constructs/web-server-instance'; // 自作コンストラクトを import
+import { Key } from 'aws-cdk-lib/aws-kms';
 
 //ここからリソースを作成
 export class CdkWorkshopStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    const systemName: string = 'workshop-';
+    const envType: string = 'prd-';
     
-    //vpcを宣言
-    const vpc = new ec2.Vpc(this, "BlogVpc", {
-      ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/16')
+    //VPC
+    const vpc = new ec2.CfnVPC(this, "BlogVpc", {
+      cidrBlock: '10.0.0.0/16',
+      enableDnsHostnames: true,
+      enableDnsSupport: true,
+      tags: [{key: "name", value: systemName + envType + "vpc" }]
     });
+
+    //サブネット
+    //WebServer1
+    const privateSubnetForWebServer1 = new ec2.PrivateSubnet(this, "privateSubnetForWebServer1", {
+      availabilityZone: 'ap-northeast-1a',
+      cidrBlock: '10.0.0.0/24',
+      vpcId: vpc.ref
+    });
+    
+    //WebServer2
+    const privateSubnetForWebServer2 = new ec2.PrivateSubnet(this, "privateSubnetForWebServer2", {
+      availabilityZone: 'ap-northeast-1c',
+      cidrBlock: '10.0.1.0/24',
+      vpcId: vpc.ref
+    });
+    
+
 
     //新しく作成したコンストラクタを使用してインスタンスを宣言
     //1台目
     const webServer1 = new WebServerInstance(this, "WebServer1", {
+      //★TODO:タグのValue部分、セキュリティグループ、サブネットを渡したい
       vpc
     });
+    
     //2台目
     const webServer2 = new WebServerInstance(this, "WebServer2", {
       vpc

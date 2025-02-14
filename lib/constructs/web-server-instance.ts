@@ -5,13 +5,13 @@ import { readFileSync } from "fs";
 
 // Construct props を定義
 export interface WebServerInstanceProps {
-  readonly vpc: ec2.IVpc
+  readonly vpc: ec2.CfnVPC
 }
 
 // EC2 インスタンスを含む Construct を定義
 export class WebServerInstance extends Construct {
   // 外部からインスタンスへアクセスできるように設定
-  public readonly instance: ec2.Instance;
+  public readonly instance: ec2.CfnInstance;
 
   constructor(scope: Construct, id: string, props: WebServerInstanceProps) {
     super(scope, id);
@@ -19,25 +19,22 @@ export class WebServerInstance extends Construct {
     // Construct props から vpc を取り出す
     const { vpc } = props;
 
-    const instance = new ec2.Instance(this, "Instance", {
-      vpc,
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.SMALL),
-      machineImage: new ec2.AmazonLinuxImage({
-        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
-      }),
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-    });
-
+    // ユーザーデータを読み込む
     const script = readFileSync("./lib/resources/user-data.sh", "utf8");
-    instance.userData.addCommands(script);
 
-    instance.connections.allowFromAnyIpv4(ec2.Port.tcp(80));
+    //EC2インスタンスを作成する
+    const instance = new ec2.CfnInstance(this, "Instance", {
+      instanceType: "t3.small", 
+      imageId: "ami-02e5504ea463e3f34",
+      userData: script,
+      securityGroupIds: [""] //★TODO:EC2用にTCP80でインバウンドを許可するSGを作成する
+    });
 
     // 作成した EC2 インスタンスをプロパティに設定
     this.instance = instance;
   
-    new CfnOutput(this, "WordpressServer1PublicIPAddress", {
-      value: `http://${instance.instancePublicIp}`,
-    });
+    // new CfnOutput(this, "WordpressServer1PublicIPAddress", {
+    //   value: `http://${instance.instancePublicIp}`,
+    // });
   }
 }
