@@ -9,7 +9,7 @@ jobs:
       - name: Send notification to Slack
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_MESSAGE: "📢 *${{ github.repository }}* に更新がありました！\n
                           🛠️ ブランチ: *${{ github.ref_name }}*\n
                           👤 ユーザー: *${{ github.actor }}*\n
