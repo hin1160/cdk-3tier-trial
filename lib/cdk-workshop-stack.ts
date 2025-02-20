@@ -5,7 +5,6 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2'; 
 import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import { WebServerInstance } from './constructs/web-server-instance'; // 自作コンストラクトを import
-import { Key } from 'aws-cdk-lib/aws-kms';
 
 //ここからリソースを作成
 export class CdkWorkshopStack extends Stack {
@@ -37,8 +36,8 @@ export class CdkWorkshopStack extends Stack {
       cidrBlock: '10.0.1.0/24',
       vpcId: vpc.ref
     });
-    
 
+    // const subnetId: string = privateSubnetForWebServer1.subnetId
 
     //新しく作成したコンストラクタを使用してインスタンスを宣言
     //1台目
