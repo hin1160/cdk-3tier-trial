@@ -1,6 +1,7 @@
 name: trial pipeline
 on: 
   push:
+  workflow_dispatch:
 jobs: 
   aws-cdk:
     runs-on: ubuntu-latest
