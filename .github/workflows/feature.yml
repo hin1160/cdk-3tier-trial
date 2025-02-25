@@ -1,0 +1,20 @@
+name: only notice to slack
+on: 
+  push:
+    branches:
+      - github.ref != 'refs/heads/main'
+  workflow_dispatch:
+jobs: 
+  notice-to-slack:
+    name: notice to slack when pushed to feature branches
+    runs-on: ubuntu-latest
+    steps:
+    - name: for feature branch
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_MESSAGE: "📢 *${{ github.repository }}* に更新がありました！\n
+                        🛠️ ブランチ: *${{ github.ref_name }}*\n
+                        👤 ユーザー: *${{ github.actor }}*\n
+                        🔗 [詳細を見る](https://github.com/${{ github.repository }}/commit/${{ github.sha }})"
+
