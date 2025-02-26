@@ -1,0 +1,29 @@
+name: diff cdk
+on: 
+  pull_request:
+  workflow_dispatch:
+jobs: 
+  diff-cdk:
+    runs-on: ubuntu-latest
+    env: 
+      AWS_REGION: "ap-northeast-1"
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup dependencies
+        run: npm ci
+      
+      - name: Assume Role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }} 
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: CDK Diff Check
+        run: npm run cdk:diff

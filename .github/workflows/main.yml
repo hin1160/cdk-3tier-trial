@@ -1,0 +1,47 @@
+name: deploy cdk
+on: 
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs: 
+  deploy-cdk:
+    runs-on: ubuntu-latest
+    env: 
+      AWS_REGION: "ap-northeast-1"
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup dependencies
+        run: npm ci
+      
+      - name: Assume Role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }} 
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: CDK Deploy
+        run: npm run cdk:deploy
+
+  notice-to-slack-main:
+    name: notice to slack when merged to main branch
+    needs: deploy-cdk
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: for main branch
+      if: contains(github.ref, 'refs/heads/main') && success()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_MESSAGE: "📢 *mainブランチにマージされました！\n
+                        👤 ユーザー: *${{ github.actor }}*\n
+                        🔗 [詳細を見る](https://github.com/${{ github.repository }}/commit/${{ github.sha }})"
+
